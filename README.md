@@ -1,8 +1,4 @@
-<<<<<<< HEAD
- ## Getting Started hi
-=======
- ## Getting Started
->>>>>>> 997ee18c2eb913f08d53974f1021e5bbebfb347e
+## Getting Started
 
 First, run the development server:
 ```
