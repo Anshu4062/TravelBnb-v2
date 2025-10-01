@@ -9,7 +9,7 @@ const Footer = () => {
     en: "English (IN)",
     hi: "हिन्दी (IN)",
     kn: "ಕನ್ನಡ (IN)",
-    mr: "मराठी (IN)",
+    
   };
   return (
     <footer className="border-t border-gray-100 bg-white">
