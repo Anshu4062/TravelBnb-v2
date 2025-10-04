@@ -138,6 +138,7 @@ export default function HostPage() {
     [key: string]: boolean;
   }>({});
   const [userId, setUserId] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState<boolean>(false);
 
   // Indian States and Union Territories list
   const statesAndUTs = [
@@ -1234,9 +1235,10 @@ export default function HostPage() {
         </button>
         <button
           type="button"
-          disabled={!isValid}
+          disabled={!isValid || submitting}
           className="rounded-full bg-rose-500 px-6 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-rose-600 disabled:cursor-not-allowed disabled:opacity-50"
           onClick={async () => {
+            if (submitting) return;
             // Validate form first
             if (!validateForm()) {
               setToast({
@@ -1258,6 +1260,7 @@ export default function HostPage() {
               return;
             }
 
+            setSubmitting(true);
             // Debug: Show current values
             console.log("🔍 Current form values:");
             console.log("  userId:", userId);
@@ -1282,6 +1285,7 @@ export default function HostPage() {
             } catch {
               setToast({ type: "error", text: "Image upload failed" });
               setTimeout(() => setToast(null), 3000);
+              setSubmitting(false);
               return;
             }
             const payload = {
@@ -1343,14 +1347,16 @@ export default function HostPage() {
                   text: data.error || "Failed to save",
                 });
                 setTimeout(() => setToast(null), 3000);
+                setSubmitting(false);
               }
             } catch {
               setToast({ type: "error", text: "Network error" });
               setTimeout(() => setToast(null), 3000);
+              setSubmitting(false);
             }
           }}
         >
-          Next
+          {submitting ? "Saving..." : "Next"}
         </button>
       </div>
 
