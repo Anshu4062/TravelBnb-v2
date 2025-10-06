@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useLanguage } from "@/app/components/LanguageProvider";
+import { useRTL } from "@/app/components/RTLProvider";
 
 const Navbar = () => {
   const [userName, setUserName] = useState<string | null>(null);
@@ -15,6 +16,7 @@ const Navbar = () => {
   const [showUserMenu, setShowUserMenu] = useState<boolean>(false);
   const [showLanguageModal, setShowLanguageModal] = useState<boolean>(false);
   const { t, setLocale, locale } = useLanguage();
+  const { isRTL } = useRTL();
   const [languageLabel, setLanguageLabel] = useState<string>("English");
   const GOOGLE_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY as
     | string
@@ -143,7 +145,7 @@ const Navbar = () => {
     window.location.href = "/";
   };
 
-  const handleSelectLanguage = (label: string, loc: "en" | "hi" | "kn" | "mr") => {
+  const handleSelectLanguage = (label: string, loc: "en" | "hi" | "kn" | "mr" | "ar") => {
     try {
       localStorage.setItem("languageLabel", label);
     } catch {}
@@ -275,8 +277,8 @@ const Navbar = () => {
   return (
     <>
     <header className="sticky top-0 z-50 w-full border-b border-gray-100 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 transition-all duration-300 md:h-20 md:px-6">
-        {/* Left: Brand */}
+      <div className={`mx-auto flex h-16 max-w-7xl items-center justify-between px-4 transition-all duration-300 md:h-20 md:px-6`}>
+        {/* Brand - RTL: Right, LTR: Left */}
         <div className="flex items-center">
           <Link
             href="/"
@@ -287,7 +289,7 @@ const Navbar = () => {
         </div>
 
         {/* Middle: Navigation Tabs */}
-        <div className="hidden items-center gap-3 md:flex">
+        <div className={`hidden items-center gap-3 md:flex`}>
           <button className="rounded-full px-6 py-3 text-base font-medium text-gray-900 bg-gray-100 transition-all duration-200 hover:bg-gray-200 hover:shadow-sm active:scale-95">
             {t("homes")}
           </button>
@@ -299,8 +301,8 @@ const Navbar = () => {
           </button>
         </div>
 
-        {/* Right: Actions */}
-        <div className="flex items-center gap-1 md:gap-2 animate-fade-in">
+        {/* Actions - RTL: Left, LTR: Right */}
+        <div className={`flex items-center gap-1 md:gap-2 animate-fade-in`}>
           <Link
             href={userName ? "/host" : "/login"}
             className="hidden rounded-full px-6 py-3 text-base font-medium text-gray-600 transition-all duration-200 hover:bg-gray-100 hover:text-gray-900 hover:shadow-sm active:scale-95 md:block"
@@ -507,6 +509,7 @@ const Navbar = () => {
                   { label: "हिन्दी — भारत", loc: "hi" },
                   { label: "ಕನ್ನಡ — ಭಾರತ", loc: "kn" },
                   { label: "मराठी — भारत", loc: "mr" },
+                  { label: "العربية — السعودية", loc: "ar" },
                 ].map(({ label, loc }) => (
                   <button
                     key={label}
@@ -528,6 +531,9 @@ const Navbar = () => {
               <div className="grid max-h-[45vh] grid-cols-1 gap-2 overflow-y-auto sm:grid-cols-2">
                 {[
                   { label: "English — India", loc: "en" },
+                  { label: "العربية — الإمارات", loc: "ar" },
+                  { label: "العربية — مصر", loc: "ar" },
+                  { label: "العربية — المغرب", loc: "ar" },
                   { label: "Azərbaycan dili — Azərbaycan", loc: "en" },
                   { label: "Bahasa Indonesia — Indonesia", loc: "en" },
                   { label: "Bosanski — Bosna i Hercegovina", loc: "en" },

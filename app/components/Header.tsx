@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useLanguage } from "@/app/components/LanguageProvider";
+import { useRTL } from "@/app/components/RTLProvider";
 
 const Header = () => {
   const [locationQuery, setLocationQuery] = useState("");
@@ -25,6 +26,7 @@ const Header = () => {
   const guestsRef = useRef<HTMLDivElement | null>(null);
   const [guests, setGuests] = useState({ adults: 0, children: 0, infants: 0, pets: 0 });
   const { t } = useLanguage();
+  const { isRTL } = useRTL();
 
   type LocationItem = {
     id: number;
@@ -160,14 +162,14 @@ const Header = () => {
     <section className="relative mx-auto w-full max-w-7xl px-4 py-10 md:py-14">
       <div className="mx-auto max-w-5xl">
         <div className="mx-auto max-w-4xl">
-          <div className="flex items-center rounded-full border border-gray-100 bg-white p-2 shadow-sm transition-all duration-200 hover:shadow-md hover:ring-1 hover:ring-gray-200 md:p-3">
-            <div ref={whereRef} className="relative flex flex-1 items-center gap-2 rounded-full px-4 py-2 hover:bg-gray-50">
-              <div className="flex w-32 flex-col">
+          <div className={`flex items-center rounded-full border border-gray-100 bg-white p-2 shadow-sm transition-all duration-200 hover:shadow-md hover:ring-1 hover:ring-gray-200 md:p-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <div ref={whereRef} className={`relative flex flex-1 items-center gap-2 rounded-full px-4 py-2 hover:bg-gray-50 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className={`flex w-32 flex-col ${isRTL ? 'text-right' : ''}`}>
                 <span className="text-xs font-semibold tracking-wide uppercase text-gray-900">
                   {t("where")}
                 </span>
                 <input
-                  className="w-full bg-transparent text-sm outline-none placeholder:text-gray-500"
+                  className={`w-full bg-transparent text-sm outline-none placeholder:text-gray-500 ${isRTL ? 'text-right' : ''}`}
                   placeholder={t("searchDestinations")}
                   value={locationQuery}
                   onChange={(e) => setLocationQuery(e.target.value)}
@@ -206,13 +208,13 @@ const Header = () => {
               )}
             </div>
             <div className="hidden h-8 w-px bg-gray-300 md:block" />
-            <div ref={checkInRef} className="relative hidden flex-1 items-center gap-2 rounded-full px-4 py-2 transition-colors hover:bg-gray-50 md:flex">
-              <div className="flex w-28 flex-col">
+            <div ref={checkInRef} className={`relative hidden flex-1 items-center gap-2 rounded-full px-4 py-2 transition-colors hover:bg-gray-50 md:flex ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className={`flex w-28 flex-col ${isRTL ? 'text-right' : ''}`}>
                 <span className="text-xs font-semibold tracking-wide uppercase text-gray-900">
                   {t("checkIn")}
                 </span>
                 <button
-                  className="w-full text-left text-sm text-gray-500"
+                  className={`w-full text-sm text-gray-500 ${isRTL ? 'text-right' : 'text-left'}`}
                   onClick={() => setIsCheckInOpen(true)}
                 >
                   {checkInDate
@@ -319,13 +321,13 @@ const Header = () => {
               )}
             </div>
             <div className="hidden h-8 w-px bg-gray-300 md:block" />
-            <div ref={checkOutRef} className="relative hidden flex-1 items-center gap-2 rounded-full px-4 py-2 transition-colors hover:bg-gray-50 md:flex">
-              <div className="flex w-28 flex-col">
+            <div ref={checkOutRef} className={`relative hidden flex-1 items-center gap-2 rounded-full px-4 py-2 transition-colors hover:bg-gray-50 md:flex ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className={`flex w-28 flex-col ${isRTL ? 'text-right' : ''}`}>
                 <span className="text-xs font-semibold tracking-wide uppercase text-gray-900">
                   {t("checkOut")}
                 </span>
                 <button
-                  className="w-full text-left text-sm text-gray-500"
+                  className={`w-full text-sm text-gray-500 ${isRTL ? 'text-right' : 'text-left'}`}
                   onClick={() => setIsCheckOutOpen(true)}
                 >
                   {checkOutDate
@@ -433,13 +435,13 @@ const Header = () => {
               )}
             </div>
             <div className="hidden h-8 w-px bg-gray-300 md:block" />
-            <div ref={guestsRef} className="relative flex flex-1 items-center gap-2 rounded-full px-4 py-2 transition-colors hover:bg-gray-50">
-              <div className="flex w-28 flex-col">
+            <div ref={guestsRef} className={`relative flex flex-1 items-center gap-2 rounded-full px-4 py-2 transition-colors hover:bg-gray-50 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className={`flex w-28 flex-col ${isRTL ? 'text-right' : ''}`}>
                 <span className="text-xs font-semibold tracking-wide uppercase text-gray-900">
                   {t("who")}
                 </span>
                 <button
-                  className="w-full text-left text-sm text-gray-500"
+                  className={`w-full text-sm text-gray-500 ${isRTL ? 'text-right' : 'text-left'}`}
                   onClick={() => setIsGuestsOpen(true)}
                 >
                   {(() => {
@@ -486,7 +488,7 @@ const Header = () => {
                   </div>
                 </div>
               )}
-              <button className="ml-2 flex h-10 w-10 items-center justify-center rounded-full bg-rose-500 text-white transition-transform duration-200 hover:scale-105 active:scale-95 md:h-12 md:w-12">
+              <button className={`${isRTL ? 'mr-2' : 'ml-2'} flex h-10 w-10 items-center justify-center rounded-full bg-rose-500 text-white transition-transform duration-200 hover:scale-105 active:scale-95 md:h-12 md:w-12`}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"

@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
-type Locale = "en" | "hi" | "kn" | "mr";
+type Locale = "en" | "hi" | "kn" | "mr" | "ar";
 
 type Dictionary = Record<string, string>;
 
@@ -311,6 +311,82 @@ const dictionaries: Record<Locale, Dictionary> = {
     reserve: "राखीव करा",
     wontBeChargedYet: "आता शुल्क आकारले जाणार नाही",
   },
+  ar: {
+    homes: "المنازل",
+    experiences: "التجارب",
+    services: "الخدمات",
+    support: "الدعم",
+    hosting: "الاستضافة",
+    travelBnbBrand: "TravelBnb",
+    discover: "اكتشف",
+    helpCenter: "مركز المساعدة",
+    airCover: "تغطية الهواء",
+    antiDiscrimination: "مكافحة التمييز",
+    disabilitySupport: "دعم ذوي الإعاقة",
+    travelBnbYourHome: "اعرض منزلك على TravelBnb",
+    airCoverForHosts: "تغطية الهواء للمضيفين",
+    hostingResources: "موارد الاستضافة",
+    communityForum: "منتدى المجتمع",
+    newsroom: "غرفة الأخبار",
+    investors: "المستثمرون",
+    careers: "الوظائف",
+    giftCards: "بطاقات الهدايا",
+    topRatedStays: "أعلى الإقامات تقييماً",
+    privacy: "الخصوصية",
+    terms: "الشروط",
+    sitemap: "خريطة الموقع",
+    host: "المضيف",
+    detectLocation: "اكتشف موقعي",
+    editHostedPlaces: "تحرير الأماكن المستضافة",
+    logout: "تسجيل الخروج",
+    languageAndRegion: "اللغة والمنطقة",
+    currency: "العملة",
+    suggestedLanguagesRegions: "اللغات والمناطق المقترحة",
+    chooseLanguageRegion: "اختر اللغة والمنطقة",
+    done: "تم",
+    where: "أين",
+    searchDestinations: "البحث عن الوجهات",
+    checkIn: "تسجيل الوصول",
+    checkOut: "تسجيل المغادرة",
+    addDates: "إضافة التواريخ",
+    who: "من",
+    addGuests: "إضافة الضيوف",
+    adults: "البالغون",
+    children: "الأطفال",
+    infants: "الرضع",
+    pets: "الحيوانات الأليفة",
+    ages13Plus: "13 سنة أو أكثر",
+    ages2to12: "2–12 سنة",
+    under2: "أقل من سنتين",
+    serviceAnimal: "هل تحضر حيوان خدمة؟",
+    datesLabel: "التواريخ",
+    monthsLabel: "الأشهر",
+    flexibleLabel: "مرن",
+    exactDates: "التواريخ المحددة",
+    homePopularInCity: "المنازل الشائعة في فاراناسي",
+    homeRecentlyHosted: "تم استضافتها مؤخراً",
+    homeAvailableThisWeekend: "متاح نهاية هذا الأسبوع",
+    noImage: "لا توجد صورة",
+    loading: "جاري التحميل…",
+    showAllPhotos: "عرض جميع الصور",
+    aboutThisPlace: "حول هذا المكان",
+    bathrooms: "دورات المياه",
+    privateAttached: "خاص ومرفق",
+    dedicated: "مخصص",
+    shared: "مشترك",
+    guestFavourites: "مفضلات الضيوف",
+    standoutAmenities: "المرافق المميزة",
+    safetyItems: "أدوات السلامة",
+    locationLabel: "الموقع",
+    loadingMap: "جاري تحميل الخريطة...",
+    coordinates: "الإحداثيات",
+    checkInCaps: "تسجيل الوصول",
+    checkoutCaps: "تسجيل المغادرة",
+    guestsCaps: "الضيوف",
+    close: "إغلاق",
+    reserve: "حجز",
+    wontBeChargedYet: "لن يتم تحصيل رسوم الآن",
+  },
 };
 
 type LanguageContextValue = {
@@ -328,7 +404,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       const saved = localStorage.getItem("locale") as Locale | null;
-      if (saved && ["en", "hi", "kn", "mr"].includes(saved)) {
+      if (saved && ["en", "hi", "kn", "mr", "ar"].includes(saved)) {
         setLocaleState(saved);
       }
     } catch {}

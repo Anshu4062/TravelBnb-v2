@@ -35,3 +35,45 @@
 /* Fine-tune border rendering alignment on HiDPI */
 .hairline { box-shadow: inset 0 0 0 1px rgb(229 231 235) }
 
+/* RTL Support */
+[dir="rtl"] {
+  text-align: right;
+}
+
+[dir="rtl"] .rtl-flip {
+  transform: scaleX(-1);
+}
+
+/* RTL-specific utility classes */
+.rtl-text-right { text-align: right; }
+.rtl-text-left { text-align: left; }
+.rtl-float-right { float: right; }
+.rtl-float-left { float: left; }
+
+/* RTL flexbox utilities */
+.rtl-flex-row-reverse { flex-direction: row-reverse; }
+.rtl-justify-start { justify-content: flex-start; }
+.rtl-justify-end { justify-content: flex-end; }
+
+/* RTL margin and padding utilities */
+.rtl-ml-auto { margin-left: auto; }
+.rtl-mr-auto { margin-right: auto; }
+.rtl-pl-4 { padding-left: 1rem; }
+.rtl-pr-4 { padding-right: 1rem; }
+
+/* RTL border utilities */
+.rtl-border-r { border-right: 1px solid; }
+.rtl-border-l { border-left: 1px solid; }
+.rtl-rounded-l { border-top-left-radius: 0.25rem; border-bottom-left-radius: 0.25rem; }
+.rtl-rounded-r { border-top-right-radius: 0.25rem; border-bottom-right-radius: 0.25rem; }
+
+/* RTL positioning utilities */
+.rtl-left-0 { left: 0; }
+.rtl-right-0 { right: 0; }
+.rtl-top-0 { top: 0; }
+.rtl-bottom-0 { bottom: 0; }
+
+/* RTL transform utilities */
+.rtl-scale-x-flip { transform: scaleX(-1); }
+.rtl-rotate-180 { transform: rotate(180deg); }
+
