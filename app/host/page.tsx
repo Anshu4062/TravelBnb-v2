@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/app/components/LanguageProvider";
+import { useRTL } from "@/app/components/RTLProvider";
 
 // Google Maps types
 declare global {
@@ -56,40 +58,42 @@ const Counter = ({
   );
 };
 
-const PROPERTY_TYPES = [
-  "House",
-  "Flat/apartment",
-  "Barn",
-  "Bed & breakfast",
-  "Boat",
-  "Cabin",
-  "Campervan/motorhome",
-  "Casa particular",
-  "Castle",
-  "Cave",
-  "Container",
-  "Cycladic home",
-  "Dammuso",
-  "Dome",
-  "Earth home",
-  "Farm",
-  "Guest house",
-  "Hotel",
-  "Houseboat",
-  "Riad",
-  "Ryokan",
-  "Shepherd’s hut",
-  "Tent",
-  "Tiny home",
-  "Tower",
-  "Tree house",
-  "Trullo",
-  "Windmill",
-  "Yurt",
+const PROPERTY_TYPE_KEYS = [
+  "house",
+  "flatApartment",
+  "barn",
+  "bedAndBreakfast",
+  "boat",
+  "cabin",
+  "campervanMotorhome",
+  "casaParticular",
+  "castle",
+  "cave",
+  "container",
+  "cycladicHome",
+  "dammuso",
+  "dome",
+  "earthHome",
+  "farm",
+  "guestHouse",
+  "hotel",
+  "houseboat",
+  "riad",
+  "ryokan",
+  "shepherdsHut",
+  "tent",
+  "tinyHome",
+  "tower",
+  "treeHouse",
+  "trullo",
+  "windmill",
+  "yurt",
 ];
 
 export default function HostPage() {
   const router = useRouter();
+  const { t } = useLanguage();
+  const { isRTL } = useRTL();
   const [guests, setGuests] = useState(2);
   const [bedrooms, setBedrooms] = useState(1);
   const [beds, setBeds] = useState(1);
@@ -561,9 +565,9 @@ export default function HostPage() {
   ]);
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-10">
+    <main className={`mx-auto w-full max-w-5xl px-4 py-10 ${isRTL ? 'rtl' : 'ltr'}`}>
       <h1 className="mb-8 text-3xl font-semibold tracking-tight">
-        Let's start with the basics
+        {t("letsStartWithBasics")}
       </h1>
 
       {/* Debug info */}
@@ -581,28 +585,28 @@ export default function HostPage() {
       {/* Property type */}
       <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
         <h2 className="mb-4 text-lg font-semibold">
-          Which of these best describes your place?
+          {t("whichBestDescribesYourPlace")}
         </h2>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {PROPERTY_TYPES.map((type) => (
+          {PROPERTY_TYPE_KEYS.map((typeKey) => (
             <button
-              key={type}
+              key={typeKey}
               type="button"
               onClick={() => {
-                setPlaceType(type);
+                setPlaceType(typeKey);
                 if (fieldErrors.placeType) {
                   setFieldErrors((prev) => ({ ...prev, placeType: false }));
                 }
               }}
               className={`rounded-xl border px-4 py-3 text-left transition-colors hover:bg-gray-50 ${
-                placeType === type
+                placeType === typeKey
                   ? "border-rose-500 bg-rose-50"
                   : fieldErrors.placeType
                   ? "border-red-500"
                   : "border-gray-200"
               }`}
             >
-              <div className="font-medium text-gray-900">{type}</div>
+              <div className="font-medium text-gray-900">{t(typeKey)}</div>
             </button>
           ))}
         </div>
@@ -610,11 +614,11 @@ export default function HostPage() {
 
       {/* Address SECOND */}
       <section className="mt-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-lg font-semibold">Confirm your address</h2>
+        <h2 className="mb-4 text-lg font-semibold">{t("confirmYourAddress")}</h2>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="md:col-span-2">
             <label className="mb-1 block text-sm font-medium">
-              Country/region
+              {t("countryRegion")}
             </label>
             <input
               value={address.country}
@@ -632,7 +636,7 @@ export default function HostPage() {
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium">
-              Flat, house, etc. (optional)
+              {t("flatHouseOptional")}
             </label>
             <input
               value={address.unit}
@@ -643,7 +647,7 @@ export default function HostPage() {
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium">
-              Street address
+              {t("streetAddress")}
             </label>
             <input
               value={address.street}
@@ -651,12 +655,12 @@ export default function HostPage() {
                 setAddress({ ...address, street: e.target.value })
               }
               className="w-full rounded-lg border border-gray-200 px-3 py-2"
-              placeholder="Street address"
+              placeholder={t("streetAddress")}
             />
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium">
-              Nearby landmark (optional)
+              {t("nearbyLandmarkOptional")}
             </label>
             <input
               value={address.landmark}
@@ -664,12 +668,12 @@ export default function HostPage() {
                 setAddress({ ...address, landmark: e.target.value })
               }
               className="w-full rounded-lg border border-gray-200 px-3 py-2"
-              placeholder="Landmark"
+              placeholder={t("landmark")}
             />
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium">
-              District/locality (optional)
+              {t("districtLocalityOptional")}
             </label>
             <input
               value={address.district}
@@ -677,11 +681,11 @@ export default function HostPage() {
                 setAddress({ ...address, district: e.target.value })
               }
               className="w-full rounded-lg border border-gray-200 px-3 py-2"
-              placeholder="Locality"
+              placeholder={t("locality")}
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium">City/town</label>
+            <label className="mb-1 block text-sm font-medium">{t("cityTown")}</label>
             <input
               value={address.city}
               onChange={(e) => {
@@ -693,11 +697,11 @@ export default function HostPage() {
               className={`w-full rounded-lg border px-3 py-2 ${
                 fieldErrors.city ? "border-red-500" : "border-gray-200"
               }`}
-              placeholder="City"
+              placeholder={t("city")}
             />
           </div>
           <div className="state-dropdown-container relative">
-            <label className="mb-1 block text-sm font-medium">State/UT</label>
+            <label className="mb-1 block text-sm font-medium">{t("stateUT")}</label>
             <div className="relative">
               <input
                 type="text"
@@ -716,7 +720,7 @@ export default function HostPage() {
                 className={`w-full rounded-lg border px-3 py-2 pr-10 outline-none focus:ring-2 focus:ring-rose-500 ${
                   fieldErrors.state ? "border-red-500" : "border-gray-200"
                 }`}
-                placeholder="Search or select State/UT"
+                placeholder={t("searchOrSelectStateUT")}
               />
               <button
                 type="button"
@@ -768,12 +772,12 @@ export default function HostPage() {
             )}
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium">PIN code</label>
+            <label className="mb-1 block text-sm font-medium">{t("pinCode")}</label>
             <input
               value={address.pin}
               onChange={(e) => setAddress({ ...address, pin: e.target.value })}
               className="w-full rounded-lg border border-gray-200 px-3 py-2"
-              placeholder="PIN code"
+              placeholder={t("pinCode")}
             />
           </div>
         </div>
@@ -785,25 +789,25 @@ export default function HostPage() {
           {/* Basics */}
           <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-md">
             <h2 className="mb-4 text-lg font-semibold">
-              How many people can stay here?
+              {t("howManyPeopleCanStay")}
             </h2>
             <div className="space-y-2">
               <Counter
-                label="Guests"
+                label={t("guests")}
                 value={guests}
                 onChange={setGuests}
                 min={1}
               />
               <Counter
-                label="Bedrooms"
+                label={t("bedrooms")}
                 value={bedrooms}
                 onChange={setBedrooms}
               />
-              <Counter label="Beds" value={beds} onChange={setBeds} />
+              <Counter label={t("beds")} value={beds} onChange={setBeds} />
             </div>
             <div className="mt-4 rounded-xl border border-gray-200 p-3">
               <p className="mb-2 text-gray-900">
-                Does every bedroom have a lock?
+                {t("doesEveryBedroomHaveLock")}
               </p>
               <div className="flex gap-3">
                 <button
@@ -815,7 +819,7 @@ export default function HostPage() {
                       : "border border-gray-300 bg-white text-gray-800 hover:bg-gray-50"
                   }`}
                 >
-                  Yes
+                  {t("yes")}
                 </button>
                 <button
                   type="button"
@@ -826,7 +830,7 @@ export default function HostPage() {
                       : "border border-gray-300 bg-white text-gray-800 hover:bg-gray-50"
                   }`}
                 >
-                  No
+                  {t("no")}
                 </button>
               </div>
             </div>
@@ -835,24 +839,24 @@ export default function HostPage() {
           {/* Bathrooms */}
           <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-md">
             <h2 className="mb-4 text-lg font-semibold">
-              What kind of bathrooms are available to guests?
+              {t("whatKindOfBathroomsAvailable")}
             </h2>
             <div className="space-y-2">
               <BathroomCounterRow
-                title="Private and attached"
-                description="Connected to the guest’s room and just for them."
+                title={t("privateAndAttached")}
+                description={t("connectedToGuestRoom")}
                 value={bathsPrivate}
                 onChange={setBathsPrivate}
               />
               <BathroomCounterRow
-                title="Dedicated"
-                description="Private, but accessed via a shared space like a hallway."
+                title={t("dedicated")}
+                description={t("privateButAccessedViaSharedSpace")}
                 value={bathsDedicated}
                 onChange={setBathsDedicated}
               />
               <BathroomCounterRow
-                title="Shared"
-                description="Shared with other people."
+                title={t("shared")}
+                description={t("sharedWithOtherPeople")}
                 value={bathsShared}
                 onChange={setBathsShared}
               />
@@ -864,14 +868,13 @@ export default function HostPage() {
       {/* Who else might be there? */}
       <section className="mt-10 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
         <h2 className="mb-1 text-2xl font-semibold">
-          Who else might be there?
+          {t("whoElseMightBeThere")}
         </h2>
         <p className="mb-5 text-sm text-gray-600">
-          Guests need to know whether they’ll encounter other people during
-          their stay.
+          {t("guestsNeedToKnowEncounterOthers")}
         </p>
         <SelectableGrid
-          options={["Me", "My family", "Other guests", "Flatmates/housemates"]}
+          options={[t("me"), t("myFamily"), t("otherGuests"), t("flatmatesHousemates")]}
           selected={whoThere}
           onChange={setWhoThere}
         />
@@ -880,24 +883,24 @@ export default function HostPage() {
       {/* Guest favourites */}
       <section className="mt-8 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
         <h2 className="mb-1 text-2xl font-semibold">
-          Tell guests what your place has to offer
+          {t("tellGuestsWhatYourPlaceHasToOffer")}
         </h2>
         <p className="mb-5 text-sm text-gray-600">
-          You can add more amenities after you publish your listing.
+          {t("canAddMoreAmenitiesAfterPublish")}
         </p>
         <h3 className="mb-3 text-base font-semibold">
-          What about these guest favourites?
+          {t("whatAboutTheseGuestFavourites")}
         </h3>
         <SelectableGrid
           options={[
-            "Wifi",
-            "TV",
-            "Kitchen",
-            "Washing machine",
-            "Free parking on premises",
-            "Paid parking on premises",
-            "Air conditioning",
-            "Dedicated workspace",
+            t("wifi"),
+            t("tv"),
+            t("kitchen"),
+            t("washingMachine"),
+            t("freeParkingOnPremises"),
+            t("paidParkingOnPremises"),
+            t("airConditioning"),
+            t("dedicatedWorkspace"),
           ]}
           selected={amenitiesFav}
           onChange={setAmenitiesFav}
@@ -908,24 +911,24 @@ export default function HostPage() {
       {/* Standout amenities */}
       <section className="mt-8 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
         <h3 className="mb-3 text-base font-semibold">
-          Do you have any standout amenities?
+          {t("doYouHaveAnyStandoutAmenities")}
         </h3>
         <SelectableGrid
           options={[
-            "Pool",
-            "Hot tub",
-            "Patio",
-            "BBQ grill",
-            "Outdoor dining area",
-            "Firepit",
-            "Pool table",
-            "Indoor fireplace",
-            "Piano",
-            "Exercise equipment",
-            "Lake access",
-            "Beach access",
-            "Ski-in/out",
-            "Outdoor shower",
+            t("pool"),
+            t("hotTub"),
+            t("patio"),
+            t("bbqGrill"),
+            t("outdoorDiningArea"),
+            t("firepit"),
+            t("poolTable"),
+            t("indoorFireplace"),
+            t("piano"),
+            t("exerciseEquipment"),
+            t("lakeAccess"),
+            t("beachAccess"),
+            t("skiInOut"),
+            t("outdoorShower"),
           ]}
           selected={amenitiesStandout}
           onChange={setAmenitiesStandout}
@@ -936,14 +939,14 @@ export default function HostPage() {
       {/* Safety items */}
       <section className="mt-8 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
         <h3 className="mb-3 text-base font-semibold">
-          Do you have any of these safety items?
+          {t("doYouHaveAnyOfTheseSafetyItems")}
         </h3>
         <SelectableGrid
           options={[
-            "Smoke alarm",
-            "First aid kit",
-            "Fire extinguisher",
-            "Carbon monoxide alarm",
+            t("smokeAlarm"),
+            t("firstAidKit"),
+            t("fireExtinguisher"),
+            t("carbonMonoxideAlarm"),
           ]}
           selected={safetyItems}
           onChange={setSafetyItems}
@@ -954,11 +957,10 @@ export default function HostPage() {
       {/* Photos uploader */}
       <section className="mt-8 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
         <h2 className="mb-1 text-2xl font-semibold">
-          Add some photos of your place
+          {t("addSomePhotosOfYourPlace")}
         </h2>
         <p className="mb-6 text-sm text-gray-600">
-          You&apos;ll need 5 photos to get started. You can add more or make
-          changes later.
+          {t("need5PhotosToGetStarted")}
         </p>
         <div className="flex flex-col items-center justify-center">
           <div className="relative mb-4 w-full max-w-3xl rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 p-10 text-center">
@@ -1015,7 +1017,7 @@ export default function HostPage() {
               htmlFor="photos-input"
               className="inline-flex cursor-pointer items-center rounded-full bg-white px-4 py-2 text-sm font-medium shadow-sm ring-1 ring-gray-200 transition hover:bg-gray-50"
             >
-              Add photos
+              {t("addPhotos")}
             </label>
           </div>
 
@@ -1038,7 +1040,7 @@ export default function HostPage() {
                       setPhotos((prev) => prev.filter((_, i) => i !== idx))
                     }
                   >
-                    Remove
+                    {t("remove")}
                   </button>
                 </div>
               ))}
@@ -1049,13 +1051,13 @@ export default function HostPage() {
 
       {/* Price */}
       <section className="mt-8 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-        <h2 className="mb-1 text-2xl font-semibold">Set your price</h2>
+        <h2 className="mb-1 text-2xl font-semibold">{t("setYourPrice")}</h2>
         <p className="mb-6 text-sm text-gray-600">
-          You can change this anytime
+          {t("canChangeThisAnytime")}
         </p>
         <div className="max-w-md">
           <label className="mb-2 block text-sm font-medium">
-            Price per night (₹)
+            {t("pricePerNight")}
           </label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
@@ -1083,11 +1085,10 @@ export default function HostPage() {
       {/* Location */}
       <section className="mt-8 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
         <h2 className="mb-1 text-2xl font-semibold">
-          Where&apos;s your place located?
+          {t("whereIsYourPlaceLocated")}
         </h2>
         <p className="mb-6 text-sm text-gray-600">
-          Your address is only shared with guests after they&apos;ve made a
-          reservation
+          {t("addressOnlySharedAfterReservation")}
         </p>
 
         <div className="space-y-4">
@@ -1114,7 +1115,7 @@ export default function HostPage() {
               htmlFor="use-current-location"
               className="text-sm font-medium"
             >
-              Use my current location
+              {t("useMyCurrentLocation")}
             </label>
             {locationLoading && (
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-rose-500"></div>
@@ -1127,13 +1128,13 @@ export default function HostPage() {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <p className="text-sm font-medium text-gray-900">
-                    Selected Location:
+                    {t("selectedLocation")}:
                   </p>
                   <p className="text-sm text-gray-600 mt-1">
                     {location.address}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    Coordinates: {location.latitude.toFixed(6)},{" "}
+                    {t("coordinates")}: {location.latitude.toFixed(6)},{" "}
                     {location.longitude.toFixed(6)}
                   </p>
                 </div>
@@ -1166,8 +1167,8 @@ export default function HostPage() {
             <div className="space-y-2">
               <p className="text-sm font-medium text-gray-900">
                 {location
-                  ? "Click on the map to select a different location:"
-                  : "Click on the map to select your location:"}
+                  ? t("clickOnMapToSelectDifferentLocation")
+                  : t("clickOnMapToSelectYourLocation")}
               </p>
               <div className="relative">
                 <div
@@ -1181,7 +1182,7 @@ export default function HostPage() {
                   <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-lg">
                     <div className="text-center">
                       <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-rose-500 mx-auto mb-2"></div>
-                      <p className="text-sm text-gray-600">Loading map...</p>
+                      <p className="text-sm text-gray-600">{t("loadingMap")}</p>
                     </div>
                   </div>
                 )}
@@ -1194,11 +1195,11 @@ export default function HostPage() {
             <div className="space-y-4">
               <div>
                 <label className="mb-2 block text-sm font-medium">
-                  Search for your location
+                  {t("searchForYourLocation")}
                 </label>
                 <input
                   type="text"
-                  placeholder="Enter address or search for a place"
+                  placeholder={t("enterAddressOrSearchForPlace")}
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 outline-none focus:ring-2 focus:ring-rose-500"
                   onKeyDown={async (e) => {
                     if (e.key === "Enter") {
@@ -1216,8 +1217,7 @@ export default function HostPage() {
                 />
               </div>
               <p className="text-xs text-gray-500">
-                For now, please use the &quot;Use my current location&quot;
-                option above
+                {t("forNowPleaseUseCurrentLocationOption")}
               </p>
             </div>
           )}
@@ -1231,7 +1231,7 @@ export default function HostPage() {
           className="rounded-full border px-5 py-2 text-sm font-medium hover:bg-gray-50"
           onClick={() => router.back()}
         >
-          Back
+          {t("back")}
         </button>
         <button
           type="button"
@@ -1356,7 +1356,7 @@ export default function HostPage() {
             }
           }}
         >
-          {submitting ? "Saving..." : "Next"}
+          {submitting ? t("saving") : t("next")}
         </button>
       </div>
 

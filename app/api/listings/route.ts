@@ -56,16 +56,33 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     await connectDB();
 
+    // Optional city filter (?city=Varanasi)
+    const url = new URL(request.url);
+    const city = url.searchParams.get("city");
+    const cityRegex = city ? new RegExp(city, "i") : null;
+
+    const query = cityRegex
+      ? {
+          $or: [
+            { "address.city": cityRegex },
+            { "address.state": cityRegex },
+            { "location.address": cityRegex },
+          ],
+        }
+      : {};
+
     // Fetch from both old and new collections
     const [oldListings, newListings] = await Promise.all([
-      Listing.find({}).sort({ createdAt: -1 }).lean(),
+      Listing.find(query).sort({ createdAt: -1 }).lean(),
       // Also check if there's a ListingV2 model available
       mongoose.models.ListingV2
-        ? mongoose.models.ListingV2.find({}).sort({ createdAt: -1 }).lean()
+        ? mongoose.models.ListingV2.find(query)
+            .sort({ createdAt: -1 })
+            .lean()
         : [],
     ]);
 
