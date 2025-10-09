@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, use as useUnwrap } from "react";
 import type { ReactNode } from "react";
 import Navbar from "@/app/components/Navbar";
 import { useLanguage } from "@/app/components/LanguageProvider";
+import { loadGoogleMaps, isGoogleMapsReady } from "@/lib/googleMaps";
 
 type Listing = {
   _id: string;
@@ -111,21 +112,16 @@ export default function ListingPage({
 
   // Load Google Maps script
   useEffect(() => {
-    const loadGoogleMaps = () => {
-      if (window.google && window.google.maps) {
+    const initializeGoogleMaps = async () => {
+      try {
+        await loadGoogleMaps();
         setMapLoaded(true);
-        return;
+      } catch (error) {
+        console.error("Failed to load Google Maps:", error);
       }
-
-      const script = document.createElement("script");
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`;
-      script.async = true;
-      script.defer = true;
-      script.onload = () => setMapLoaded(true);
-      document.head.appendChild(script);
     };
 
-    loadGoogleMaps();
+    initializeGoogleMaps();
   }, []);
 
   // Initialize map when listing and map are loaded

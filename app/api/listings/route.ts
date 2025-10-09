@@ -86,17 +86,21 @@ export async function GET(request: NextRequest) {
         : [],
     ]);
 
-    // Combine and sort all listings
+    // Combine and deduplicate listings by _id
     const allListings = [...newListings, ...oldListings]
+      .reduce((acc: any[], listing: any) => {
+        const existingIndex = acc.findIndex(item => item._id.toString() === listing._id.toString());
+        if (existingIndex === -1) {
+          acc.push(listing);
+        }
+        return acc;
+      }, [])
       .sort(
-        (a, b) =>
+        (a: any, b: any) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       )
       .slice(0, 24);
 
-    console.log(
-      `Found ${oldListings.length} old listings and ${newListings.length} new listings`
-    );
 
     return NextResponse.json(allListings, { status: 200 });
   } catch (e) {

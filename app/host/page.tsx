@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/app/components/LanguageProvider";
 import { useRTL } from "@/app/components/RTLProvider";
+import { loadGoogleMaps, isGoogleMapsReady } from "@/lib/googleMaps";
 
 // Google Maps types
 declare global {
@@ -129,8 +130,6 @@ export default function HostPage() {
     longitude: number;
     address: string;
   } | null>(null);
-  const [useCurrentLocation, setUseCurrentLocation] = useState<boolean>(false);
-  const [locationLoading, setLocationLoading] = useState<boolean>(false);
   const [mapLoaded, setMapLoaded] = useState<boolean>(false);
   const [stateSearchTerm, setStateSearchTerm] = useState<string>("");
   const [showStateDropdown, setShowStateDropdown] = useState<boolean>(false);
@@ -267,15 +266,11 @@ export default function HostPage() {
       errors.placeType = true;
       isValid = false;
     }
-    if (!address.country) {
-      errors.country = true;
-      isValid = false;
-    }
-    if (!address.city) {
+    if (!address.city.trim()) {
       errors.city = true;
       isValid = false;
     }
-    if (!address.state) {
+    if (!address.state.trim()) {
       errors.state = true;
       isValid = false;
     }
@@ -283,11 +278,11 @@ export default function HostPage() {
       errors.guests = true;
       isValid = false;
     }
-    if (bedrooms <= 0) {
+    if (bedrooms < 0) {
       errors.bedrooms = true;
       isValid = false;
     }
-    if (beds <= 0) {
+    if (beds < 0) {
       errors.beds = true;
       isValid = false;
     }
@@ -306,21 +301,16 @@ export default function HostPage() {
 
   // Load Google Maps script
   useEffect(() => {
-    const loadGoogleMaps = () => {
-      if (window.google && window.google.maps) {
+    const initializeGoogleMaps = async () => {
+      try {
+        await loadGoogleMaps();
         setMapLoaded(true);
-        return;
+      } catch (error) {
+        console.error("Failed to load Google Maps:", error);
       }
-
-      const script = document.createElement("script");
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`;
-      script.async = true;
-      script.defer = true;
-      script.onload = () => setMapLoaded(true);
-      document.head.appendChild(script);
     };
 
-    loadGoogleMaps();
+    initializeGoogleMaps();
   }, []);
 
   // Initialize Google Maps when map is loaded
@@ -364,11 +354,15 @@ export default function HostPage() {
       map.addListener("click", async (event: any) => {
         const lat = event.latLng.lat();
         const lng = event.latLng.lng();
-        try {
-          const address = await reverseGeocodeAddress(lat, lng);
-          setLocation({ latitude: lat, longitude: lng, address });
-          setUseCurrentLocation(false); // User manually selected location
-        } catch {
+         try {
+           const address = await reverseGeocodeAddress(lat, lng);
+           setLocation({ latitude: lat, longitude: lng, address });
+           setToast({
+             type: "success",
+             text: "Location selected successfully!",
+           });
+           setTimeout(() => setToast(null), 2000);
+         } catch {
           setToast({
             type: "error",
             text: "Failed to get address for selected location",
@@ -382,11 +376,10 @@ export default function HostPage() {
         marker.addListener("dragend", async (event: any) => {
           const lat = event.latLng.lat();
           const lng = event.latLng.lng();
-          try {
-            const address = await reverseGeocodeAddress(lat, lng);
-            setLocation({ latitude: lat, longitude: lng, address });
-            setUseCurrentLocation(false); // User manually selected location
-          } catch {
+         try {
+           const address = await reverseGeocodeAddress(lat, lng);
+           setLocation({ latitude: lat, longitude: lng, address });
+         } catch {
             setToast({
               type: "error",
               text: "Failed to get address for selected location",
@@ -439,11 +432,10 @@ export default function HostPage() {
         marker.addListener("dragend", async (event: any) => {
           const lat = event.latLng.lat();
           const lng = event.latLng.lng();
-          try {
-            const address = await reverseGeocodeAddress(lat, lng);
-            setLocation({ latitude: lat, longitude: lng, address });
-            setUseCurrentLocation(false);
-          } catch {
+         try {
+           const address = await reverseGeocodeAddress(lat, lng);
+           setLocation({ latitude: lat, longitude: lng, address });
+         } catch {
             setToast({
               type: "error",
               text: "Failed to get address for selected location",
@@ -512,33 +504,6 @@ export default function HostPage() {
     return `${latitude}, ${longitude}`;
   };
 
-  const handleDetectCurrentLocation = async () => {
-    if (locationLoading) return;
-    setLocationLoading(true);
-
-    try {
-      const position = await new Promise<GeolocationPosition>(
-        (resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, {
-            enableHighAccuracy: true,
-            timeout: 15000,
-            maximumAge: 0,
-          });
-        }
-      );
-
-      const { latitude, longitude } = position.coords;
-      const address = await reverseGeocodeAddress(latitude, longitude);
-
-      setLocation({ latitude, longitude, address });
-      setUseCurrentLocation(true);
-    } catch {
-      setToast({ type: "error", text: "Failed to detect current location" });
-      setTimeout(() => setToast(null), 3000);
-    } finally {
-      setLocationLoading(false);
-    }
-  };
 
   const isValid = useMemo(() => {
     return (
@@ -549,7 +514,6 @@ export default function HostPage() {
       placeType.length > 0 &&
       address.city.trim().length > 0 &&
       address.state.trim().length > 0 &&
-      address.pin.trim().length >= 4 &&
       price > 0 &&
       location !== null
     );
@@ -559,7 +523,8 @@ export default function HostPage() {
     beds,
     locksAllBedrooms,
     placeType,
-    address,
+    address.city,
+    address.state,
     price,
     location,
   ]);
@@ -581,6 +546,7 @@ export default function HostPage() {
           ❌ No user ID found - please log in again
         </div>
       )}
+
 
       {/* Property type */}
       <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
@@ -757,6 +723,9 @@ export default function HostPage() {
                         setAddress({ ...address, state });
                         setStateSearchTerm("");
                         setShowStateDropdown(false);
+                        if (fieldErrors.state) {
+                          setFieldErrors((prev) => ({ ...prev, state: false }));
+                        }
                       }}
                       className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
                     >
@@ -772,7 +741,7 @@ export default function HostPage() {
             )}
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium">{t("pinCode")}</label>
+            <label className="mb-1 block text-sm font-medium">{t("pinCode")} (Optional)</label>
             <input
               value={address.pin}
               onChange={(e) => setAddress({ ...address, pin: e.target.value })}
@@ -1091,36 +1060,7 @@ export default function HostPage() {
           {t("addressOnlySharedAfterReservation")}
         </p>
 
-        <div className="space-y-4">
-          {/* Current Location Option */}
-          <div className="flex items-center space-x-3">
-            <input
-              type="checkbox"
-              id="use-current-location"
-              checked={useCurrentLocation}
-              onChange={(e) => {
-                setUseCurrentLocation(e.target.checked);
-                if (e.target.checked) {
-                  handleDetectCurrentLocation();
-                } else {
-                  setLocation(null);
-                }
-                if (fieldErrors.location) {
-                  setFieldErrors((prev) => ({ ...prev, location: false }));
-                }
-              }}
-              className="h-4 w-4 text-rose-600 focus:ring-rose-500"
-            />
-            <label
-              htmlFor="use-current-location"
-              className="text-sm font-medium"
-            >
-              {t("useMyCurrentLocation")}
-            </label>
-            {locationLoading && (
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-rose-500"></div>
-            )}
-          </div>
+         <div className="space-y-4">
 
           {/* Location Display */}
           {location && (
@@ -1138,14 +1078,16 @@ export default function HostPage() {
                     {location.longitude.toFixed(6)}
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLocation(null);
-                    setUseCurrentLocation(false);
-                  }}
-                  className="ml-2 text-gray-400 hover:text-gray-600"
-                >
+                 <button
+                   type="button"
+                   onClick={() => {
+                     setLocation(null);
+                     if (fieldErrors.location) {
+                       setFieldErrors((prev) => ({ ...prev, location: false }));
+                     }
+                   }}
+                   className="ml-2 text-gray-400 hover:text-gray-600"
+                 >
                   <svg
                     className="h-5 w-5"
                     fill="currentColor"
@@ -1190,37 +1132,35 @@ export default function HostPage() {
             </div>
           )}
 
-          {/* Manual Location Input */}
-          {!useCurrentLocation && (
-            <div className="space-y-4">
-              <div>
-                <label className="mb-2 block text-sm font-medium">
-                  {t("searchForYourLocation")}
-                </label>
-                <input
-                  type="text"
-                  placeholder={t("enterAddressOrSearchForPlace")}
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2 outline-none focus:ring-2 focus:ring-rose-500"
-                  onKeyDown={async (e) => {
-                    if (e.key === "Enter") {
-                      const query = e.currentTarget.value;
-                      if (query.trim()) {
-                        // Simple geocoding - in a real app, you'd use Google Places API
-                        setToast({
-                          type: "error",
-                          text: "Please use &apos;Use my current location&apos; for now",
-                        });
-                        setTimeout(() => setToast(null), 3000);
-                      }
-                    }
-                  }}
-                />
-              </div>
-              <p className="text-xs text-gray-500">
-                {t("forNowPleaseUseCurrentLocationOption")}
-              </p>
-            </div>
-          )}
+           {/* Manual Location Input */}
+           <div className="space-y-4">
+             <div>
+               <label className="mb-2 block text-sm font-medium">
+                 {t("searchForYourLocation")}
+               </label>
+               <input
+                 type="text"
+                 placeholder={t("enterAddressOrSearchForPlace")}
+                 className="w-full rounded-lg border border-gray-200 px-3 py-2 outline-none focus:ring-2 focus:ring-rose-500"
+                 onKeyDown={async (e) => {
+                   if (e.key === "Enter") {
+                     const query = e.currentTarget.value;
+                     if (query.trim()) {
+                       // Simple geocoding - in a real app, you'd use Google Places API
+                       setToast({
+                         type: "error",
+                         text: "Please use the map to select your location",
+                       });
+                       setTimeout(() => setToast(null), 3000);
+                     }
+                   }
+                 }}
+               />
+             </div>
+             <p className="text-xs text-gray-500">
+               {t("forNowPleaseUseCurrentLocationOption")}
+             </p>
+           </div>
         </div>
       </section>
 
@@ -1239,6 +1179,10 @@ export default function HostPage() {
           className="rounded-full bg-rose-500 px-6 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-rose-600 disabled:cursor-not-allowed disabled:opacity-50"
           onClick={async () => {
             if (submitting) return;
+            
+            // Prevent double submission
+            setSubmitting(true);
+            
             // Validate form first
             if (!validateForm()) {
               setToast({
@@ -1246,6 +1190,7 @@ export default function HostPage() {
                 text: "Please fill all required fields correctly",
               });
               setTimeout(() => setToast(null), 3000);
+              setSubmitting(false);
               return;
             }
 
@@ -1260,7 +1205,6 @@ export default function HostPage() {
               return;
             }
 
-            setSubmitting(true);
             // Debug: Show current values
             console.log("🔍 Current form values:");
             console.log("  userId:", userId);
@@ -1337,6 +1281,9 @@ export default function HostPage() {
                   type: "success",
                   text: "Listing saved successfully! Redirecting to home...",
                 });
+                // Trigger event to refresh listings on home page
+                console.log("Dispatching listingCreated event...");
+                window.dispatchEvent(new CustomEvent('listingCreated'));
                 setTimeout(() => {
                   setToast(null);
                   router.push("/");

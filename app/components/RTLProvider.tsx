@@ -26,7 +26,7 @@ export function RTLProvider({ children }: { children: React.ReactNode }) {
 
   const value = {
     isRTL,
-    dir: isRTL ? "rtl" : "ltr" as const,
+    dir: (isRTL ? "rtl" : "ltr") as "rtl" | "ltr",
   };
 
   return <RTLContext.Provider value={value}>{children}</RTLContext.Provider>;

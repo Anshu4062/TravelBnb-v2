@@ -54,6 +54,8 @@ const Navbar = () => {
           setCity(name);
           try {
             localStorage.setItem("currentCity", name);
+            // Dispatch city change event
+            window.dispatchEvent(new CustomEvent('cityChanged'));
           } catch {}
         }
       }
@@ -257,6 +259,8 @@ const Navbar = () => {
             localStorage.setItem("currentCity", preciseCity);
             localStorage.setItem("currentLat", String(precise.latitude));
             localStorage.setItem("currentLon", String(precise.longitude));
+            // Dispatch city change event
+            window.dispatchEvent(new CustomEvent('cityChanged'));
           } catch {}
           setLastCoords({ latitude: precise.latitude, longitude: precise.longitude });
           return; // Done

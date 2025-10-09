@@ -10,29 +10,104 @@ type Listing = {
   placeType: string;
   photos?: string[];
   address?: { city?: string; state?: string };
+  location?: { address?: string };
+  createdAt?: string;
+  userId?: string;
+  price?: number;
 };
 
 export default function Home() {
-  const [listings, setListings] = useState<Listing[]>([]);
+  const [allListings, setAllListings] = useState<Listing[]>([]);
+  const [filteredListings, setFilteredListings] = useState<Listing[]>([]);
   const { t } = useLanguage();
   const [city, setCity] = useState<string | null>(null);
 
-  useEffect(() => {
-    (async () => {
+  const fetchListings = async () => {
+    try {
+      let currentCity: string | null = null;
       try {
-        let city: string | null = null;
-        try {
-          city = localStorage.getItem("currentCity");
-          setCity(city);
-        } catch {}
-        const url = city
-          ? `/api/listings?city=${encodeURIComponent(city)}`
-          : "/api/listings";
-        const res = await fetch(url);
-        const data = await res.json();
-        if (Array.isArray(data)) setListings(data);
+        currentCity = localStorage.getItem("currentCity");
+        setCity(currentCity);
       } catch {}
-    })();
+      
+      // Always fetch ALL listings (no city filter)
+      const url = `/api/listings?t=${Date.now()}`;
+        
+      const res = await fetch(url, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      });
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        // Check for duplicates before setting
+        const uniqueListings = data.filter((listing, index, self) => 
+          index === self.findIndex(l => l._id === listing._id)
+        );
+        setAllListings(uniqueListings);
+        console.log(`Fetched ${data.length} listings (all cities), ${uniqueListings.length} unique`);
+        if (data.length !== uniqueListings.length) {
+          console.warn(`Found ${data.length - uniqueListings.length} duplicate listings`);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching listings:", error);
+    }
+  };
+
+  // Filter listings based on selected city
+  useEffect(() => {
+    if (allListings.length > 0) {
+      if (city) {
+        // Filter listings by city for Popular homes section
+        const cityFiltered = allListings.filter(listing => 
+          listing.address?.city?.toLowerCase().includes(city.toLowerCase()) ||
+          listing.address?.state?.toLowerCase().includes(city.toLowerCase()) ||
+          listing.location?.address?.toLowerCase().includes(city.toLowerCase())
+        );
+        setFilteredListings(cityFiltered);
+        console.log(`Filtered ${cityFiltered.length} listings for city: ${city}`);
+      } else {
+        // No city selected, show all listings
+        setFilteredListings(allListings);
+        console.log(`No city selected, showing all ${allListings.length} listings`);
+      }
+    } else {
+      setFilteredListings([]);
+    }
+  }, [allListings, city]);
+
+  useEffect(() => {
+    fetchListings();
+    
+    // Listen for listing creation events
+    const handleListingCreated = () => {
+      console.log("Listing created, refreshing listings...");
+      fetchListings();
+    };
+
+    // Listen for city changes
+    const handleCityChange = () => {
+      console.log("City changed, refreshing listings...");
+      fetchListings();
+    };
+
+    window.addEventListener('listingCreated', handleListingCreated);
+    window.addEventListener('cityChanged', handleCityChange);
+    
+    // Also refresh on page focus (in case user navigates back)
+    const handleFocus = () => {
+      fetchListings();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      window.removeEventListener('listingCreated', handleListingCreated);
+      window.removeEventListener('cityChanged', handleCityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   return (
@@ -40,13 +115,14 @@ export default function Home() {
       <Navbar />
       <Header />
 
-      {listings.length > 0 && (
+      {/* Popular Homes Section - Show first */}
+      {filteredListings.length > 0 && (
         <section className="mx-auto w-full max-w-7xl px-4 py-10 animate-fade-in">
           <h2 className="mb-6 text-xl font-semibold tracking-tight md:text-2xl">
             {city ? `${t("popularHomesIn")} ${city}` : t("homePopularInCity")}
           </h2>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {listings.slice(0, 4).map((l) => (
+            {filteredListings.slice(0, 4).map((l) => (
               <a
                 href={`/listing/${l._id}`}
                 key={l._id}
@@ -70,7 +146,7 @@ export default function Home() {
                   )}
                 </div>
                 <div className="p-3">
-                  <p className="text-sm font-medium">{l.placeType}</p>
+                  <p className="text-sm font-medium">{l.placeType?.toUpperCase()}</p>
                   <p className="mt-1 text-xs text-gray-600">
                     {l.address?.city || ""} {l.address?.state || ""}
                   </p>
@@ -81,13 +157,14 @@ export default function Home() {
         </section>
       )}
 
-      {listings.length > 4 && (
+      {/* Recently Hosted Section - Show second */}
+      {allListings.length > 0 && (
         <section className="mx-auto w-full max-w-7xl px-4 pb-12 animate-fade-in">
           <h2 className="mb-6 text-xl font-semibold tracking-tight md:text-2xl">
-            {t("homeAvailableThisWeekend")}
+            {t("homeRecentlyHosted")}
           </h2>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {listings.slice(4, 13).map((l) => (
+            {allListings.slice(0, 6).map((l) => (
               <a
                 href={`/listing/${l._id}`}
                 key={l._id}
@@ -111,7 +188,7 @@ export default function Home() {
                   )}
                 </div>
                 <div className="p-4">
-                  <p className="text-base font-semibold">{l.placeType}</p>
+                  <p className="text-base font-semibold">{l.placeType?.toUpperCase()}</p>
                   <p className="mt-1 text-sm text-gray-600">
                     {l.address?.city || ""} {l.address?.state || ""}
                   </p>
@@ -121,6 +198,7 @@ export default function Home() {
           </div>
         </section>
       )}
+
     </>
   );
 }
