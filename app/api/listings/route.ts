@@ -63,14 +63,44 @@ export async function GET(request: NextRequest) {
     // Optional city filter (?city=Varanasi)
     const url = new URL(request.url);
     const city = url.searchParams.get("city");
-    const cityRegex = city ? new RegExp(city, "i") : null;
+    
+    // Helper function to extract city name from complex location strings
+    const extractCityFromLocation = (locationString: string): string => {
+      const location = locationString.toLowerCase().trim();
+      
+      // Handle "Nearby" case - don't filter for this
+      if (location === 'nearby') {
+        return '';
+      }
+      
+      // Extract city from patterns like "New Delhi, Delhi" -> "delhi"
+      const cityMatch = location.match(/^([^,]+)/);
+      if (cityMatch) {
+        let cityName = cityMatch[1].trim();
+        
+        // Handle common city name variations
+        if (cityName.includes('new delhi')) return 'delhi';
+        if (cityName.includes('mumbai')) return 'mumbai';
+        if (cityName.includes('bangalore') || cityName.includes('bengaluru')) return 'bangalore';
+        if (cityName.includes('kolkata') || cityName.includes('calcutta')) return 'kolkata';
+        if (cityName.includes('chennai') || cityName.includes('madras')) return 'chennai';
+        
+        return cityName;
+      }
+      
+      return location;
+    };
+
+    // Extract the main city name for filtering
+    const cityToFilter = city ? extractCityFromLocation(city) : null;
+    const cityRegex = cityToFilter ? new RegExp(cityToFilter, "i") : null;
 
     const query = cityRegex
       ? {
           $or: [
             { "address.city": cityRegex },
             { "address.state": cityRegex },
-            { "location.address": cityRegex },
+            // REMOVED: { "location.address": cityRegex } - ignore map location completely
           ],
         }
       : {};

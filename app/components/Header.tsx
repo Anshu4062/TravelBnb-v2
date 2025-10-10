@@ -172,8 +172,29 @@ const Header = () => {
                   className={`w-full bg-transparent text-sm outline-none placeholder:text-gray-500 ${isRTL ? 'text-right' : ''}`}
                   placeholder={t("searchDestinations")}
                   value={locationQuery}
-                  onChange={(e) => setLocationQuery(e.target.value)}
+                  onChange={(e) => {
+                    setLocationQuery(e.target.value);
+                    // If input is cleared, dispatch event to clear selected location
+                    if (!e.target.value.trim()) {
+                      const event = new CustomEvent('locationSelected', {
+                        detail: { location: null }
+                      });
+                      window.dispatchEvent(event);
+                    }
+                  }}
                   onFocus={() => setIsLocationOpen(true)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && locationQuery.trim()) {
+                      setIsLocationOpen(false);
+                      // Dispatch location selection event for typed location
+                      const event = new CustomEvent('locationSelected', {
+                        detail: { location: locationQuery.trim() }
+                      });
+                      window.dispatchEvent(event);
+                    } else if (e.key === 'Escape') {
+                      setIsLocationOpen(false);
+                    }
+                  }}
                 />
               </div>
               {isLocationOpen && (
@@ -191,6 +212,12 @@ const Header = () => {
                           onClick={() => {
                             setLocationQuery(loc.title);
                             setIsLocationOpen(false);
+                            
+                            // Dispatch location selection event
+                            const event = new CustomEvent('locationSelected', {
+                              detail: { location: loc.title }
+                            });
+                            window.dispatchEvent(event);
                           }}
                         >
                           <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${loc.bg} ${loc.text}`}>
