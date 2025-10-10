@@ -133,6 +133,8 @@ export default function HostPage() {
   const [mapLoaded, setMapLoaded] = useState<boolean>(false);
   const [stateSearchTerm, setStateSearchTerm] = useState<string>("");
   const [showStateDropdown, setShowStateDropdown] = useState<boolean>(false);
+  const [useCurrentLocation, setUseCurrentLocation] = useState<boolean>(false);
+  const [loadingLocation, setLoadingLocation] = useState<boolean>(false);
   const [toast, setToast] = useState<{
     type: "success" | "error";
     text: string;
@@ -142,6 +144,127 @@ export default function HostPage() {
   }>({});
   const [userId, setUserId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState<boolean>(false);
+
+  // Debug useEffect to track checkbox state changes
+  useEffect(() => {
+    console.log('useCurrentLocation state changed:', useCurrentLocation);
+  }, [useCurrentLocation]);
+
+  // Function to get current location and reverse geocode
+  const getCurrentLocation = async () => {
+    if (!navigator.geolocation) {
+      // Disabled error popup - just return silently
+      // setToast({
+      //   type: "error",
+      //   text: "Geolocation is not supported by your browser",
+      // });
+      // setTimeout(() => setToast(null), 3000);
+      return;
+    }
+
+    setLoadingLocation(true);
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+
+        try {
+          // Reverse geocode to get address
+          const response = await fetch(
+            `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`
+          );
+          const data = await response.json();
+
+          if (data.results && data.results.length > 0) {
+            const result = data.results[0];
+            const addressComponents = result.address_components;
+
+            // Extract address components
+            let city = "";
+            let state = "";
+            let country = "";
+            let pin = "";
+            let street = "";
+            let district = "";
+
+            addressComponents.forEach((component: any) => {
+              if (component.types.includes("locality")) {
+                city = component.long_name;
+              } else if (component.types.includes("administrative_area_level_3") && !city) {
+                city = component.long_name;
+              } else if (component.types.includes("administrative_area_level_1")) {
+                state = component.long_name;
+              } else if (component.types.includes("country")) {
+                country = component.long_name;
+              } else if (component.types.includes("postal_code")) {
+                pin = component.long_name;
+              } else if (component.types.includes("route")) {
+                street = component.long_name;
+              } else if (component.types.includes("sublocality") || component.types.includes("administrative_area_level_2")) {
+                district = component.long_name;
+              }
+            });
+
+            // Update address fields
+            setAddress({
+              ...address,
+              city: city,
+              state: state,
+              country: country ? `${country}` : address.country,
+              pin: pin,
+              street: street,
+              district: district,
+            });
+
+            // Update map location
+            setLocation({
+              latitude,
+              longitude,
+              address: result.formatted_address,
+            });
+
+            setToast({
+              type: "success",
+              text: "Location detected successfully!",
+            });
+            setTimeout(() => setToast(null), 3000);
+          }
+        } catch (error) {
+          console.error("Error reverse geocoding:", error);
+          // Disabled error popup - just log the error silently
+          // setToast({
+          //   type: "error",
+          //   text: "Failed to get address from location",
+          // });
+          // setTimeout(() => setToast(null), 3000);
+        } finally {
+          setLoadingLocation(false);
+        }
+      },
+      (error) => {
+        console.error("Error getting location:", error);
+        setLoadingLocation(false);
+        // Don't reset the checkbox state on error - let user decide
+        // setUseCurrentLocation(false);
+        
+        // Disabled error popup - just log the error silently
+        // let errorMessage = "Failed to get your location";
+        // if (error.code === error.PERMISSION_DENIED) {
+        //   errorMessage = "Location permission denied. Please enable location access.";
+        // } else if (error.code === error.POSITION_UNAVAILABLE) {
+        //   errorMessage = "Location information unavailable";
+        // } else if (error.code === error.TIMEOUT) {
+        //   errorMessage = "Location request timed out";
+        // }
+        
+        // setToast({
+        //   type: "error",
+        //   text: errorMessage,
+        // });
+        // setTimeout(() => setToast(null), 3000);
+      }
+    );
+  };
 
   // Indian States and Union Territories list
   const statesAndUTs = [
@@ -581,6 +704,79 @@ export default function HostPage() {
       {/* Address SECOND */}
       <section className="mt-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
         <h2 className="mb-4 text-lg font-semibold">{t("confirmYourAddress")}</h2>
+        
+        {/* Use Current Location Checkbox */}
+        <div className="mb-4 flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+          <div className="relative">
+            <input
+              type="checkbox"
+              id="useCurrentLocation"
+              checked={useCurrentLocation}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setUseCurrentLocation(checked);
+                if (checked) {
+                  getCurrentLocation();
+                }
+              }}
+              disabled={loadingLocation}
+              className="sr-only"
+            />
+            <div 
+              className={`h-4 w-4 rounded border-2 flex items-center justify-center cursor-pointer transition-colors ${
+                useCurrentLocation 
+                  ? 'bg-white border-green-500' 
+                  : 'bg-white border-gray-300 hover:border-rose-300'
+              } ${loadingLocation ? 'opacity-50 cursor-not-allowed' : ''}`}
+              onClick={() => {
+                if (!loadingLocation) {
+                  const newChecked = !useCurrentLocation;
+                  console.log('Checkbox clicked, new state:', newChecked);
+                  setUseCurrentLocation(newChecked);
+                  if (newChecked) {
+                    // Add a small delay to ensure state is set before calling geolocation
+                    setTimeout(() => {
+                      getCurrentLocation();
+                    }, 100);
+                  }
+                }
+              }}
+            >
+              {useCurrentLocation && (
+                <svg
+                  className="h-3 w-3 text-green-500"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              )}
+            </div>
+          </div>
+          <label
+            htmlFor="useCurrentLocation"
+            className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="h-5 w-5 text-rose-500"
+            >
+              <path
+                fillRule="evenodd"
+                d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z"
+                clipRule="evenodd"
+              />
+            </svg>
+            {loadingLocation ? "Detecting your location..." : "Use my current location"}
+          </label>
+        </div>
+
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="md:col-span-2">
             <label className="mb-1 block text-sm font-medium">
